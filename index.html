@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blackstone E-Series Master Griddle Hub</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 15px rgba(249, 115, 22, 0.4); }
+            50% { box-shadow: 0 0 30px rgba(249, 115, 22, 0.8); }
+        }
+        .flip-alert-pulse {
+            animation: pulse-glow 1.5s infinite;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col selection:bg-orange-500 selection:text-white">
+
+    <header class="bg-gradient-to-r from-slate-900 via-orange-950/40 to-slate-900 border-b border-slate-800 sticky top-0 z-50 backdrop-blur-md">
+        <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="bg-orange-600 text-white p-2 rounded-xl shadow-lg shadow-orange-600/30 font-bold text-base sm:text-lg tracking-wider">
+                    🔥 E-SERIES
+                </div>
+                <div>
+                    <h1 class="font-bold text-sm sm:text-base text-slate-100 leading-tight">Blackstone Griddle Hub</h1>
+                    <p class="text-[11px] text-orange-400 font-medium">Breakfast • Lunch • Dinner Guides</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-1.5">
+                <button onclick="switchMainTab('guide')" id="nav-guide-btn" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-orange-600 text-white transition-all shadow-sm">Guide</button>
+                <button onclick="switchMainTab('queue')" id="nav-queue-btn" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 transition-all flex items-center space-x-1">
+                    <span>⚡ Multi-Cook</span>
+                    <span id="queue-badge" class="bg-orange-500 text-white text-[10px] px-1.5 py-0.2 rounded-full font-bold hidden">0</span>
+                </button>
+                <button onclick="switchMainTab('planner')" id="nav-planner-btn" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 transition-all">Zones</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-4xl w-full mx-auto px-4 py-5 pb-24">
+        
+        <!-- ================= GUIDE / MEAL HUB VIEW ================= -->
+        <div id="view-guide" class="space-y-6">
+            
+            <!-- Meal Category Selector Tabs -->
+            <div class="flex space-x-2 bg-slate-900 border border-slate-800 p-1.5 rounded-2xl shadow-lg">
+                <button onclick="switchMealCategory('breakfast')" id="meal-btn-breakfast" class="flex-1 py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm bg-orange-600 text-white transition-all shadow-md flex items-center justify-center space-x-1.5">
+                    <span>🍳</span><span>Breakfast</span>
+                </button>
+                <button onclick="switchMealCategory('lunch')" id="meal-btn-lunch" class="flex-1 py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm bg-slate-800/80 text-slate-300 hover:bg-slate-700 transition-all flex items-center justify-center space-x-1.5">
+                    <span>🍔</span><span>Lunch</span>
+                </button>
+                <button onclick="switchMealCategory('dinner')" id="meal-btn-dinner" class="flex-1 py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm bg-slate-800/80 text-slate-300 hover:bg-slate-700 transition-all flex items-center justify-center space-x-1.5">
+                    <span>🥩</span><span>Dinner</span>
+                </button>
+            </div>
+
+            <!-- Hero Banner & Sub-Filters -->
+            <div class="bg-gradient-to-br from-slate-900 to-slate-900/80 border border-slate-800/80 rounded-2xl p-5 shadow-xl relative overflow-hidden">
+                <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-orange-600/10 rounded-full blur-3xl pointer-events-none"></div>
+                <h2 id="hub-title" class="text-lg font-bold text-white mb-1">Breakfast Master Hub</h2>
+                <p id="hub-desc" class="text-xs text-slate-400 mb-4">Tap any item below to choose doneness, check digital temps, start custom timers, or add to your simultaneous multi-cook line.</p>
+                
+                <!-- Sub Filter Chips -->
+                <div id="sub-filter-container" class="flex space-x-2 overflow-x-auto no-scrollbar pb-1 text-xs">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+
+            <!-- Food Grid Container -->
+            <div id="food-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <!-- Dynamically populated via JS -->
+            </div>
+        </div>
+
+        <!-- ================= SIMULTANEOUS MULTI-COOK QUEUE VIEW ================= -->
+        <div id="view-queue" class="hidden space-y-6">
+            <div class="bg-gradient-to-br from-slate-900 to-orange-950/20 border border-slate-800 rounded-2xl p-5 shadow-xl">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
+                    <div>
+                        <h2 class="text-lg font-bold text-white flex items-center space-x-2">
+                            <span>⚡ Simultaneous Multi-Cook Dashboard</span>
+                        </h2>
+                        <p class="text-xs text-slate-400">Add any items from Breakfast, Lunch, or Dinner. Halfway flip alerts will notify you automatically!</p>
+                    </div>
+                    <div class="flex items-center space-x-2 w-full sm:w-auto flex-wrap gap-y-2">
+                        <button onclick="switchMainTab('guide')" class="bg-orange-600 hover:bg-orange-500 text-white px-3.5 py-2 rounded-xl text-xs font-bold transition-all shadow-md shadow-orange-600/30">+ Add Items</button>
+                        <button onclick="startAllQueuedTimers()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3.5 py-2 rounded-xl text-xs font-bold transition-all">Start All</button>
+                        <button onclick="pauseAllQueuedTimers()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-2 rounded-xl text-xs font-semibold transition-all">Pause All</button>
+                        <button onclick="clearQueue()" class="bg-slate-800 hover:bg-red-950/40 text-red-400 hover:text-red-300 px-3 py-2 rounded-xl text-xs font-semibold transition-all">Clear</button>
+                    </div>
+                </div>
+
+                <!-- Active Queued Items List Grid -->
+                <div id="queue-items-container" class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= DUAL ZONE PLANNER VIEW ================= -->
+        <div id="view-planner" class="hidden space-y-6">
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl">
+                <div class="flex items-center justify-between mb-3">
+                    <div>
+                        <h2 class="text-lg font-bold text-white">Dual-Zone Griddle Planner</h2>
+                        <p class="text-xs text-slate-400">Select what you're cooking across your meals to get recommended Zone 1 &amp; Zone 2 digital temperatures.</p>
+                    </div>
+                    <button onclick="resetPlanner()" class="text-xs bg-slate-800 text-slate-300 hover:bg-slate-700 px-3 py-1.5 rounded-lg font-medium transition-all">Reset</button>
+                </div>
+
+                <!-- Checkbox Selection List -->
+                <div id="planner-checkboxes" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mt-4">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+
+            <!-- Calculated Recommendations Card -->
+            <div id="planner-results" class="bg-gradient-to-br from-orange-950/30 to-slate-900 border border-orange-500/30 rounded-2xl p-5 shadow-xl">
+                <h3 class="text-sm font-bold text-orange-400 uppercase tracking-wider mb-3">Recommended Zone Setup</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="bg-slate-950/60 border border-slate-800 p-4 rounded-xl">
+                        <span class="text-xs font-semibold text-orange-400 bg-orange-950/80 px-2.5 py-1 rounded-md border border-orange-800/50">Zone 1 (Left)</span>
+                        <div id="zone-1-rec" class="text-sm font-medium text-slate-200 mt-2">Select items to generate recommendation.</div>
+                    </div>
+                    <div class="bg-slate-950/60 border border-slate-800 p-4 rounded-xl">
+                        <span class="text-xs font-semibold text-blue-400 bg-blue-950/80 px-2.5 py-1 rounded-md border border-blue-800/50">Zone 2 (Right)</span>
+                        <div id="zone-2-rec" class="text-sm font-medium text-slate-200 mt-2">Select items to generate recommendation.</div>
+                    </div>
+                </div>
+                <p class="text-xs text-slate-400 mt-4 italic">💡 Tip: Group high-heat searing items on one zone and delicate items on the other for a seamless cooking line.</p>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- ITEM DETAIL MODAL -->
+    <div id="item-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 hidden transition-opacity">
+        <div class="bg-slate-900 border border-slate-800 w-full max-w-lg rounded-t-3xl sm:rounded-2xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden transform transition-transform">
+            
+            <div class="p-4 border-b border-slate-800 flex items-center justify-between bg-slate-900/90 sticky top-0 z-10">
+                <div class="flex items-center space-x-3">
+                    <span id="modal-emoji" class="text-2xl">🍔</span>
+                    <div>
+                        <h3 id="modal-title" class="font-bold text-base text-white">Item Name</h3>
+                        <span id="modal-badge" class="text-[10px] font-semibold px-2 py-0.5 rounded bg-orange-950 text-orange-400 border border-orange-800/50">Category</span>
+                    </div>
+                </div>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 p-2 rounded-xl transition-all">
+                    ✕
+                </button>
+            </div>
+
+            <div class="p-5 overflow-y-auto space-y-5 text-sm">
+                
+                <div class="space-y-2">
+                    <label class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Select Target Doneness / Style</label>
+                    <div id="doneness-options" class="grid grid-cols-3 gap-2">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="bg-slate-950/50 border border-slate-800 p-3.5 rounded-xl">
+                        <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">Griddle Temp</span>
+                        <span id="modal-temp" class="text-base font-bold text-orange-400">400°F</span>
+                    </div>
+                    <div class="bg-slate-950/50 border border-slate-800 p-3.5 rounded-xl">
+                        <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">Active Doneness</span>
+                        <span id="modal-target" class="text-xs font-semibold text-slate-200">Medium</span>
+                    </div>
+                </div>
+
+                <div class="bg-gradient-to-br from-orange-950/30 to-slate-950 border border-orange-500/30 p-4 rounded-xl flex items-center justify-between">
+                    <div>
+                        <div class="text-xs font-bold text-orange-400 uppercase tracking-wider">Multi-Cook Station Ready</div>
+                        <p class="text-[11px] text-slate-300 mt-0.5">Add this item with your chosen style to your active simultaneous cooking queue.</p>
+                    </div>
+                    <button onclick="addItemToQueue()" class="bg-orange-600 hover:bg-orange-500 text-white px-4 py-2.5 rounded-xl text-xs font-bold transition-all shadow-md shadow-orange-600/30 whitespace-nowrap">
+                        + Add to Multi-Cook
+                    </button>
+                </div>
+
+                <div>
+                    <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Step-by-Step Directions</h4>
+                    <div id="modal-steps" class="space-y-2">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+
+                <div class="bg-slate-950/40 border border-slate-800/80 p-3.5 rounded-xl">
+                    <h4 class="text-xs font-bold text-emerald-400 uppercase tracking-wider mb-1 flex items-center space-x-1.5">
+                        <span>💡 Pro Tip</span>
+                    </h4>
+                    <p id="modal-tip" class="text-xs text-slate-300 leading-relaxed"></p>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- HALFWAY FLIP ALERT MODAL POP-UP -->
+    <div id="flip-alert-modal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden animate-in fade-in duration-200">
+        <div class="bg-slate-900 border-2 border-orange-500 w-full max-w-md rounded-2xl p-6 shadow-2xl text-center space-y-4 flip-alert-pulse">
+            <div class="w-16 h-16 bg-orange-600/20 border border-orange-500 text-orange-400 text-3xl rounded-full flex items-center justify-center mx-auto shadow-inner">
+                🍳
+            </div>
+            <div>
+                <span class="text-xs font-bold uppercase tracking-widest text-orange-400 bg-orange-950/80 px-3 py-1 rounded-full border border-orange-800/60">Time to Flip!</span>
+                <h3 id="flip-alert-title" class="text-xl font-black text-white mt-2">Flip Your Bacon Now!</h3>
+                <p id="flip-alert-desc" class="text-xs text-slate-300 mt-1">Your item has reached the halfway mark. Give it a clean flip on the Blackstone ceramic surface for even browning.</p>
+            </div>
+            <div class="pt-2">
+                <button onclick="dismissFlipAlert()" class="w-full bg-orange-600 hover:bg-orange-500 text-white font-bold py-3 px-4 rounded-xl text-sm transition-all shadow-lg shadow-orange-600/40">
+                    Got It! (Dismiss Alert)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Master Database covering Breakfast, Lunch, and Dinner
+        const masterDatabase = {
+            breakfast: [
+                {
+                    id: 'bacon',
+                    name: 'Bacon',
+                    subCat: 'meat',
+                    emoji: '🥓',
+                    temp: '375°F to 400°F',
+                    states: [
+                        { name: 'Chewy & Tender', seconds: 150, desc: 'Soft and pliable with fully rendered fat.' },
+                        { name: 'Standard / Medium', seconds: 210, desc: 'Balanced crispness and tender bite.' },
+                        { name: 'Extra Crispy', seconds: 300, desc: 'Deeply browned and crunchy throughout.' }
+                    ],
+                    steps: [
+                        'Pre-heat your Blackstone E-Series to 375°F–400°F.',
+                        'Lay bacon strips flat across the electric ceramic surface.',
+                        'Start your timer and flip when prompted at the halfway mark.',
+                        'Cook until fully rendered to preference.'
+                    ],
+                    tip: 'Start on a pre-heated surface for maximum sizzle, or a cold surface for extra rendered fat.'
+                },
+                {
+                    id: 'toast',
+                    name: 'Classic Breakfast Toast',
+                    subCat: 'starch',
+                    emoji: '🍞',
+                    temp: '350°F',
+                    states: [
+                        { name: 'Lightly Toasted', seconds: 60, desc: 'Warm bread with a light golden hue.' },
+                        { name: 'Golden Brown', seconds: 90, desc: 'Evenly toasted crunch on both sides.' },
+                        { name: 'Crispy & Dark', seconds: 130, desc: 'Deep golden crunch with rich buttery exterior.' }
+                    ],
+                    steps: [
+                        'Pre-heat your Blackstone E-Series griddle zone to a steady 350°F.',
+                        'Lightly butter or oil the outer faces of your bread slices.',
+                        'Place bread directly onto the flat ceramic non-stick surface.',
+                        'Flip when the halfway alert sounds to toast the second side to perfection.'
+                    ],
+                    tip: 'Using soft sandwich bread, sourdough, or brioche directly on the E-Series ceramic plate gives an incredible, even griddle crust.'
+                },
+                {
+                    id: 'sausage',
+                    name: 'Pork Sausage (Links or Patties)',
+                    subCat: 'meat',
+                    emoji: '🌭',
+                    temp: '375°F',
+                    states: [
+                        { name: 'Standard Juicy', seconds: 300, desc: 'Cooked to 160°F internal with maximum moisture.' },
+                        { name: 'Well Done Crust', seconds: 390, desc: 'Deeply browned exterior with a firm bite.' }
+                    ],
+                    steps: [
+                        'Pre-heat griddle zone to 375°F.',
+                        'Place sausage links or patties evenly on the surface.',
+                        'Flip at halfway mark to brown both sides.',
+                        'Ensure internal temperature reaches 160°F.'
+                    ],
+                    tip: 'Keep links moving every minute or two so they develop an even golden-brown crust.'
+                },
+                {
+                    id: 'pancakes',
+                    name: 'Fluffy Pancakes',
+                    subCat: 'starch',
+                    emoji: '🥞',
+                    temp: '350°F',
+                    states: [
+                        { name: 'Light & Golden', seconds: 120, desc: 'Soft interior with light golden hue.' },
+                        { name: 'Classic Brown', seconds: 150, desc: 'Even golden brown with fluffy rise.' },
+                        { name: 'Crispy Edges', seconds: 200, desc: 'Golden crust with crisp edges.' }
+                    ],
+                    steps: [
+                        'Pre-heat griddle zone to a steady 350°F.',
+                        'Lightly wipe ceramic non-stick surface with touch of oil or butter.',
+                        'Pour batter onto griddle; watch for bubbles to form.',
+                        'Flip immediately when the halfway alert sounds for an even golden color.'
+                    ],
+                    tip: 'Do not crowd the griddle; leave 1 inch of space between pancakes.'
+                },
+                {
+                    id: 'french-toast',
+                    name: 'Classic French Toast',
+                    subCat: 'starch',
+                    emoji: '🍞',
+                    temp: '350°F',
+                    states: [
+                        { name: 'Soft Custard', seconds: 120, desc: 'Tender interior with gentle toast exterior.' },
+                        { name: 'Golden Crust', seconds: 180, desc: 'Rich golden crust and fully set egg layer.' }
+                    ],
+                    steps: [
+                        'Pre-heat griddle to 350°F.',
+                        'Quickly dip sliced bread into your egg, milk, and vanilla mixture.',
+                        'Place immediately onto the griddle surface.',
+                        'Flip at the halfway notification to build a rich golden crust.'
+                    ],
+                    tip: 'Use slightly stale brioche or Texas toast for best structure and custard absorption.'
+                },
+                {
+                    id: 'scrambled-eggs',
+                    name: 'Scrambled Eggs',
+                    subCat: 'egg',
+                    emoji: '🍳',
+                    temp: '300°F to 325°F',
+                    states: [
+                        { name: 'Soft & Silky', seconds: 60, desc: 'Glossy, delicate curds pulled early.' },
+                        { name: 'Standard Firm', seconds: 90, desc: 'Fully set tender curds.' }
+                    ],
+                    steps: [
+                        'Set griddle temperature to a gentle 300°F–325°F.',
+                        'Pour whisked eggs directly onto the warm surface.',
+                        'Using silicone spatula, gently push and fold eggs continuously.',
+                        'Pull off griddle right when timer ends.'
+                    ],
+                    tip: 'Lower heat is the secret to fluffy, restaurant-quality scrambled eggs.'
+                },
+                {
+                    id: 'over-easy-eggs',
+                    name: 'Over-Easy Eggs',
+                    subCat: 'egg',
+                    emoji: '🍳',
+                    temp: '325°F',
+                    states: [
+                        { name: 'Runny Yolk & Set Whites', seconds: 90, desc: 'Tender whites with a liquid golden yolk.' },
+                        { name: 'Slightly Jammy Yolk', seconds: 120, desc: 'Fully opaque whites with a warm, soft yolk.' }
+                    ],
+                    steps: [
+                        'Pre-heat your Blackstone E-Series griddle zone to a steady 325°F and lightly oil the surface.',
+                        'Crack eggs directly onto the griddle, keeping yolks intact.',
+                        'Wait for the halfway flip alert notification to ensure whites are set underneath.',
+                        'Carefully slide your spatula under and perform a clean flip for the remaining 45 seconds.'
+                    ],
+                    tip: 'A gentle flip right when the whites solidify on the bottom guarantees a pristine over-easy egg with a runny yolk.'
+                },
+                {
+                    id: 'fried-eggs',
+                    name: 'Fried Eggs',
+                    subCat: 'egg',
+                    emoji: '🍳',
+                    temp: '325°F',
+                    states: [
+                        { name: 'Sunny Side Up', seconds: 120, desc: 'Firm whites with completely liquid yolk.' },
+                        { name: 'Over Medium', seconds: 180, desc: 'Fully set whites with warm, jammy yolk.' }
+                    ],
+                    steps: [
+                        'Set griddle temperature to 325°F.',
+                        'Crack eggs onto lightly oiled surface.',
+                        'Add a tablespoon of water around eggs and cover with dome to steam whites.'
+                    ],
+                    tip: 'Using a basting dome cooks egg whites evenly without needing to flip.'
+                },
+                {
+                    id: 'hash-browns',
+                    name: 'Crispy Hash Browns',
+                    subCat: 'starch',
+                    emoji: '🥔',
+                    temp: '400°F',
+                    states: [
+                        { name: 'Golden & Tender', seconds: 360, desc: 'Lightly golden potato shreds with soft center.' },
+                        { name: 'Extra Crispy', seconds: 480, desc: 'Deep golden brown with maximum crunch.' }
+                    ],
+                    steps: [
+                        'Pre-heat griddle to 400°F and add oil or butter.',
+                        'Spread shredded potatoes in an even layer.',
+                        'Flip at halfway mark when deep golden crust forms.'
+                    ],
+                    tip: 'Squeeze all excess moisture out of shredded potatoes with a paper towel before griddling for ultimate crunch.'
+                }
+            ],
+            lunch: [
+                {
+                    id: 'smash-burger',
+                    name: 'Classic Smash Burger',
+                    subCat: 'meat',
+                    emoji: '🍔',
+                    temp: '425°F to 450°F',
+                    states: [
+                        { name: 'Single Patty & Cheese', seconds: 150, desc: 'Lacy crispy edges with melted cheddar.' },
+                        { name: 'Double Patty Stack', seconds: 210, desc: 'Double crust with juicy center.' }
+                    ],
+                    steps: [
+                        'Pre-heat Blackstone E-Series griddle to high (425°F–450°F).',
+                        'Place ball of ground beef on griddle and smash down firmly with heavy press for 10 seconds.',
+                        'Season with salt and pepper; flip when edges are deeply browned and crispy.'
+                    ],
+                    tip: 'Do not move the meat after smashing; the lacy crust depends on uninterrupted contact with the high-heat ceramic.'
+                },
+                {
+                    id: 'cheesesteak',
+                    name: 'Philly Cheesesteak',
+                    subCat: 'meat',
+                    emoji: '🥩',
+                    temp: '400°F',
+                    states: [
+                        { name: 'Standard Melt', seconds: 240, desc: 'Tender ribeye strips with melted provolone.' },
+                        { name: 'Extra Charred', seconds: 300, desc: 'Slightly caramelized edges with melted cheese.' }
+                    ],
+                    steps: [
+                        'Pre-heat griddle to 400°F.',
+                        'Place thinly sliced ribeye on griddle, chopping and tossing with spatula.',
+                        'Add onions and peppers, mix until tender, top with cheese to melt.'
+                    ],
+                    tip: 'Freeze ribeye for 30 minutes before slicing to get paper-thin steak strips.'
+                },
+                {
+                    id: 'grilled-cheese',
+                    name: 'Ultimate Grilled Cheese',
+                    subCat: 'starch',
+                    emoji: '🧀',
+                    temp: '350°F',
+                    states: [
+                        { name: 'Golden & Gooey', seconds: 180, desc: 'Melted cheese with golden buttered crust.' },
+                        { name: 'Extra Crunchy', seconds: 240, desc: 'Deep golden brown with crispy cheddar exterior.' }
+                    ],
+                    steps: [
+                        'Pre-heat griddle to 350°F.',
+                        'Butter outer slices of bread and place sandwich down.',
+                        'Flip at halfway point when bottom crust is golden.'
+                    ],
+                    tip: 'Use mayonnaise on the outside of the bread instead of butter for an ultra-crispy, even restaurant crust.'
+                },
+                {
+                    id: 'blt-sandwich',
+                    name: 'BLT Sandwich Bread',
+                    subCat: 'starch',
+                    emoji: '🥪',
+                    temp: '350°F',
+                    states: [
+                        { name: 'Light Toast', seconds: 60, desc: 'Warm toasted bread ready for mayo and bacon.' },
+                        { name: 'Crispy Toast', seconds: 90, desc: 'Sturdy toasted slices.' }
+                    ],
+                    steps: [
+                        'Pre-heat griddle to 350°F.',
+                        'Toast bread slices until golden on both sides.',
+                        'Assemble with cooked bacon, lettuce, and tomato.'
+                    ],
+                    tip: 'Toast bread right after cooking bacon to absorb the savory residual flavor.'
+                },
+                {
+                    id: 'quesadilla',
+                    name: 'Chicken or Cheese Quesadilla',
+                    subCat: 'starch',
+                    emoji: '🌮',
+                    temp: '375°F',
+                    states: [
+                        { name: 'Soft & Melted', seconds: 150, desc: 'Warm tortilla with melted cheese blend.' },
+                        { name: 'Crispy Tortilla', seconds: 210, desc: 'Golden crunchy tortilla exterior.' }
+                    ],
+                    steps: [
+                        'Pre-heat griddle to 375°F.',
+                        'Place tortilla down, add cheese and fillings on one half, fold over.',
+                        'Flip when bottom is golden brown.'
+                    ],
+                    tip: 'Lightly brush the griddle surface with oil before placing tortilla down for even crunch.'
+                },
+                {
+                    id: 'hot-dog',
+                    name: 'Griddle Hot Dogs',
+                    subCat: 'meat',
+                    emoji: '🌭',
+                    temp: '375°F',
+                    states: [
+                        { name: 'Plump & Juicy', seconds: 240, desc: 'Heated through with gentle sear marks.' },
+                        { name: 'Charred & Split', seconds: 330, desc: 'Deeply blistered skin and smoky flavor.' }
+                    ],
+                    steps: [
+                        'Pre-heat griddle to 375°F.',
+                        'Score hot dogs lightly and place on griddle.',
+                        'Rotate every minute until blistered and heated through.'
+                    ],
+                    tip: 'Score diagonal slits into the dogs to let heat penetrate and create great caramelization.'
+                }
+            ],
+            dinner: [
+                {
+                    id: 'ribeye-steak',
+                    name: 'Ribeye Steak',
+                    subCat: 'meat',
+                    emoji: '🥩',
+                    temp: '450°F',
+                    states: [
+                        { name: 'Medium Rare', seconds: 240, desc: 'Warm red center with rich charred crust (130°F).' },
+                        { name: 'Medium', seconds: 300, desc: 'Warm pink center with savory sear (140°F).' },
+                        { name: 'Well Done', seconds: 390, desc: 'Fully cooked throughout.' }
+                    ],
+                    steps: [
+                        'Pre-heat griddle to high (450°F).',
+                        'Season steak generously with coarse salt and pepper.',
+                        'Sear on griddle, flipping at halfway mark to build a rich crust.'
+                    ],
+                    tip: 'Let steak rest for 5 minutes off the griddle before slicing to retain juices.'
+                },
+                {
+                    id: 'chicken-breast',
+                    name: 'Juicy Chicken Breast',
+                    subCat: 'meat',
+                    emoji: '🍗',
+                    temp: '400°F',
+                    states: [
+                        { name: 'Standard Tender', seconds: 360, desc: 'Juicy interior cooked to 165°F.' },
+                        { name: 'Golden Charred', seconds: 450, desc: 'Deep golden exterior with smoky grill notes.' }
+                    ],
+                    steps: [
+                        'Pre-heat griddle to 400°F.',
+                        'Place seasoned chicken breasts on griddle.',
+                        'Flip at halfway point and cook until internal temp reaches 165°F.'
+                    ],
+                    tip: 'Pound chicken breasts to an even thickness so they cook uniformly without drying out.'
+                },
+                {
+                    id: 'shrimp',
+                    name: 'Garlic Butter Shrimp',
+                    subCat: 'seafood',
+                    emoji: '🍤',
+                    temp: '400°F',
+                    states: [
+                        { name: 'Tender & Juicy', seconds: 120, desc: 'Opaque pink shrimp cooked just right.' },
+                        { name: 'Slightly Charred', seconds: 180, desc: 'Caramelized garlic butter crust.' }
+                    ],
+                    steps: [
+                        'Pre-heat griddle to 400°F.',
+                        'Add butter and peeled shrimp in a single layer.',
+                        'Flip after 60 seconds; cook until pink and curled.'
+                    ],
+                    tip: 'Shrimp cook extremely fast on the E-Series; remove immediately once they turn opaque.'
+                },
+                {
+                    id: 'salmon-filet',
+                    name: 'Crispy Skin Salmon',
+                    subCat: 'seafood',
+                    emoji: '🐟',
+                    temp: '375°F',
+                    states: [
+                        { name: 'Medium (Juicy)', seconds: 300, desc: 'Crispy skin with tender, flaky pink center.' },
+                        { name: 'Well Done', seconds: 390, desc: 'Fully flaky throughout.' }
+                    ],
+                    steps: [
+                        'Pre-heat griddle to 375°F with light oil.',
+                        'Place salmon skin-side down first.',
+                        'Flip gently at halfway mark for final sear.'
+                    ],
+                    tip: 'Press salmon gently down with your spatula for the first 30 seconds to crisp up the skin.'
+                },
+                {
+                    id: 'fajita-peppers',
+                    name: 'Fajita Peppers & Onions',
+                    subCat: 'veg',
+                    emoji: '🫑',
+                    temp: '400°F',
+                    states: [
+                        { name: 'Crisp-Tender', seconds: 240, desc: 'Vibrant veggies with slight crunch.' },
+                        { name: 'Caramelized & Charred', seconds: 360, desc: 'Soft, sweet charred edges.' }
+                    ],
+                    steps: [
+                        'Pre-heat griddle to 400°F with oil.',
+                        'Spread sliced bell peppers and onions across surface.',
+                        'Toss every minute until tender and charred.'
+                    ],
+                    tip: 'Cut strips uniformly so they caramelize at the exact same rate.'
+                },
+                {
+                    id: 'zucchini-squash',
+                    name: 'Griddled Zucchini & Squash',
+                    subCat: 'veg',
+                    emoji: '🥒',
+                    temp: '375°F',
+                    states: [
+                        { name: 'Tender Crisp', seconds: 180, desc: 'Warm squash rounds with grill marks.' },
+                        { name: 'Soft & Caramelized', seconds: 270, desc: 'Tender, rich browned rounds.' }
+                    ],
+                    steps: [
+                        'Pre-heat griddle to 375°F.',
+                        'Place zucchini rounds in single layer with oil and seasoning.',
+                        'Flip at halfway point for even browning.'
+                    ],
+                    tip: 'Do not crowd the griddle so the zucchini chars instead of steaming.'
+                }
+            ]
+        };
+
+        // Application State
+        let currentCategory = 'breakfast';
+        let currentSubFilter = 'all';
+        let activeModalItem = null;
+        let selectedModalStateIndex = 0;
+        
+        // Simultaneous Multi-Cook Queue Array
+        let cookingQueue = [];
+
+        // Initialization on Load
+        window.onload = function() {
+            renderFoodGrid();
+            renderPlannerCheckboxes();
+            updateQueueBadge();
+        };
+
+        function switchMainTab(tabName) {
+            const guideView = document.getElementById('view-guide');
+            const queueView = document.getElementById('view-queue');
+            const plannerView = document.getElementById('view-planner');
+
+            const guideBtn = document.getElementById('nav-guide-btn');
+            const queueBtn = document.getElementById('nav-queue-btn');
+            const plannerBtn = document.getElementById('nav-planner-btn');
+
+            // Hide all views
+            guideView.classList.add('hidden');
+            queueView.classList.add('hidden');
+            plannerView.classList.add('hidden');
+
+            // Reset tab button styles
+            guideBtn.className = 'px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 transition-all';
+            queueBtn.className = 'px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 transition-all flex items-center space-x-1';
+            plannerBtn.className = 'px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 transition-all';
+
+            if (tabName === 'guide') {
+                guideView.classList.remove('hidden');
+                guideBtn.className = 'px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-orange-600 text-white transition-all shadow-sm';
+            } else if (tabName === 'queue') {
+                queueView.classList.remove('hidden');
+                queueBtn.className = 'px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-orange-600 text-white transition-all shadow-sm flex items-center space-x-1';
+                renderQueueItems();
+            } else if (tabName === 'planner') {
+                plannerView.classList.remove('hidden');
+                plannerBtn.className = 'px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-orange-600 text-white transition-all shadow-sm';
+            }
+        }
+
+        function switchMealCategory(category) {
+            currentCategory = category;
+            currentSubFilter = 'all';
+
+            // Update tab button styles
+            ['breakfast', 'lunch', 'dinner'].forEach(cat => {
+                const btn = document.getElementById(`meal-btn-${cat}`);
+                if (cat === category) {
+                    btn.className = 'flex-1 py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm bg-orange-600 text-white transition-all shadow-md flex items-center justify-center space-x-1.5';
+                } else {
+                    btn.className = 'flex-1 py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm bg-slate-800/80 text-slate-300 hover:bg-slate-700 transition-all flex items-center justify-center space-x-1.5';
+                }
+            });
+
+            // Update titles and descriptions
+            const titles = { breakfast: 'Breakfast Master Hub', lunch: 'Lunch Master Hub', dinner: 'Dinner Master Hub' };
+            const descs = {
+                breakfast: 'Tap any item below to choose doneness, check digital temps, start custom timers, or add to your simultaneous multi-cook line.',
+                lunch: 'Master high-heat smash burgers, quesadillas, cheesesteaks, and toasted sandwiches.',
+                dinner: 'Perfect your searing temps for ribeyes, chicken breasts, salmon filets, and griddled vegetables.'
+            };
+
+            document.getElementById('hub-title').innerText = titles[category];
+            document.getElementById('hub-desc').innerText = descs[category];
+
+            renderSubFilters();
+            renderFoodGrid();
+        }
+
+        function renderSubFilters() {
+            const container = document.getElementById('sub-filter-container');
+            const items = masterDatabase[currentCategory];
+            
+            // Extract unique subcategories
+            const subCats = ['all', ...new Set(items.map(i => i.subCat))];
+            
+            const labels = {
+                all: '✨ All Items',
+                meat: '🥩 Meats & Proteins',
+                starch: '🍞 Breads & Starches',
+                egg: '🍳 Eggs',
+                seafood: '🦐 Seafood',
+                veg: '🫑 Vegetables'
+            };
+
+            container.innerHTML = subCats.map(sc => `
+                <button onclick="setSubFilter('${sc}')" class="px-3 py-1.5 rounded-lg font-semibold whitespace-nowrap transition-all ${currentSubFilter === sc ? 'bg-orange-600 text-white shadow' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}">
+                    ${labels[sc] || sc}
+                </button>
+            `).join('');
+        }
+
+        function setSubFilter(subCat) {
+            currentSubFilter = subCat;
+            renderSubFilters();
+            renderFoodGrid();
+        }
+
+        function renderFoodGrid() {
+            const container = document.getElementById('food-grid');
+            let items = masterDatabase[currentCategory];
+
+            if (currentSubFilter !== 'all') {
+                items = items.filter(i => i.subCat === currentSubFilter);
+            }
+
+            container.innerHTML = items.map(item => `
+                <div onclick="openItemModal('${item.id}')" class="bg-slate-900 border border-slate-800 hover:border-orange-500/50 p-4 rounded-2xl cursor-pointer transition-all hover:shadow-xl hover:shadow-orange-600/10 group flex flex-col justify-between">
+                    <div class="flex items-start justify-between mb-3">
+                        <div class="flex items-center space-x-3">
+                            <span class="text-3xl p-2 bg-slate-800/80 rounded-xl group-hover:scale-110 transition-transform">${item.emoji}</span>
+                            <div>
+                                <h3 class="font-bold text-sm sm:text-base text-white group-hover:text-orange-400 transition-colors">${item.name}</h3>
+                                <span class="text-[10px] font-semibold px-2 py-0.5 rounded bg-slate-800 text-slate-400 uppercase tracking-wider">${item.subCat}</span>
+                            </div>
+                        </div>
+                        <span class="text-xs font-bold text-orange-400 bg-orange-950/60 px-2 py-1 rounded-lg border border-orange-800/40">${item.temp}</span>
+                    </div>
+                    <div class="pt-2 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400">
+                        <span>⏱️ ${Math.round(item.states[0].seconds / 60)} - ${Math.round(item.states[item.states.length - 1].seconds / 60)} mins</span>
+                        <span class="text-orange-400 font-semibold group-hover:translate-x-1 transition-transform">Configure &amp; Add →</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function findItemById(id) {
+            for (let cat of ['breakfast', 'lunch', 'dinner']) {
+                const found = masterDatabase[cat].find(i => i.id === id);
+                if (found) return found;
+            }
+            return null;
+        }
+
+        function openItemModal(id) {
+            const item = findItemById(id);
+            if (!item) return;
+
+            activeModalItem = item;
+            selectedModalStateIndex = 0;
+
+            document.getElementById('modal-emoji').innerText = item.emoji;
+            document.getElementById('modal-title').innerText = item.name;
+            document.getElementById('modal-badge').innerText = item.subCat.toUpperCase();
+            document.getElementById('modal-temp').innerText = item.temp;
+            document.getElementById('modal-tip').innerText = item.tip;
+
+            renderModalStates();
+            renderModalSteps();
+
+            const modal = document.getElementById('item-modal');
+            modal.classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('item-modal').classList.add('hidden');
+            activeModalItem = null;
+        }
+
+        function renderModalStates() {
+            const container = document.getElementById('doneness-options');
+            if (!activeModalItem) return;
+
+            container.innerHTML = activeModalItem.states.map((st, idx) => `
+                <button onclick="selectModalState(${idx})" class="p-2.5 rounded-xl border text-left transition-all ${selectedModalStateIndex === idx ? 'bg-orange-600/20 border-orange-500 text-white shadow-md' : 'bg-slate-950/60 border-slate-800 text-slate-300 hover:border-slate-700'}">
+                    <div class="font-bold text-xs">${st.name}</div>
+                    <div class="text-[10px] ${selectedModalStateIndex === idx ? 'text-orange-300' : 'text-slate-400'} mt-0.5">⏱️ ${Math.floor(st.seconds / 60)}m ${st.seconds % 60}s</div>
+                </button>
+            `).join('');
+
+            document.getElementById('modal-target').innerText = activeModalItem.states[selectedModalStateIndex].name;
+        }
+
+        function selectModalState(idx) {
+            selectedModalStateIndex = idx;
+            renderModalStates();
+        }
+
+        function renderModalSteps() {
+            const container = document.getElementById('modal-steps');
+            if (!activeModalItem) return;
+
+            container.innerHTML = activeModalItem.steps.map((step, idx) => `
+                <div class="flex items-start space-x-2.5 text-xs text-slate-300 bg-slate-950/40 p-2.5 rounded-xl border border-slate-800/60">
+                    <span class="bg-orange-950 text-orange-400 font-bold px-1.5 py-0.5 rounded border border-orange-800/50 text-[10px]">${idx + 1}</span>
+                    <p class="leading-relaxed">${step}</p>
+                </div>
+            `).join('');
+        }
+
+        function addItemToQueue() {
+            if (!activeModalItem) return;
+
+            const state = activeModalItem.states[selectedModalStateIndex];
+            const queueItem = {
+                instanceId: 'q_' + Date.now() + Math.random().toString(36).substring(2, 5),
+                id: activeModalItem.id,
+                name: activeModalItem.name,
+                emoji: activeModalItem.emoji,
+                temp: activeModalItem.temp,
+                stateName: state.name,
+                totalSeconds: state.seconds,
+                remainingSeconds: state.seconds,
+                halfwaySeconds: Math.floor(state.seconds / 2),
+                halfwayAlertShown: false,
+                isRunning: false,
+                timerInterval: null
+            };
+
+            cookingQueue.push(queueItem);
+            updateQueueBadge();
+            closeModal();
+
+            // Switch to queue view to show active item
+            switchMainTab('queue');
+        }
+
+        function updateQueueBadge() {
+            const badge = document.getElementById('queue-badge');
+            if (cookingQueue.length > 0) {
+                badge.innerText = cookingQueue.length;
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+        }
+
+        function renderQueueItems() {
+            const container = document.getElementById('queue-items-container');
+            
+            if (cookingQueue.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full py-12 text-center bg-slate-950/40 border border-slate-800 rounded-2xl">
+                        <div class="text-4xl mb-2">⚡</div>
+                        <h3 class="font-bold text-base text-slate-200">Your Multi-Cook Station is Empty</h3>
+                        <p class="text-xs text-slate-400 mt-1 max-w-sm mx-auto">Browse Breakfast, Lunch, or Dinner items, configure your doneness, and add them here to cook simultaneously!</p>
+                        <button onclick="switchMainTab('guide')" class="mt-4 bg-orange-600 hover:bg-orange-500 text-white px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-md">+ Browse Food Hub</button>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = cookingQueue.map((item, index) => {
+                const mins = Math.floor(item.remainingSeconds / 60);
+                const secs = item.remainingSeconds % 60;
+                const timeStr = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+                const progress = ((item.totalSeconds - item.remainingSeconds) / item.totalSeconds) * 100;
+
+                return `
+                    <div class="bg-slate-950/60 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-lg relative overflow-hidden">
+                        <div class="absolute top-0 left-0 h-1 bg-orange-500 transition-all duration-300" style="width: ${progress}%"></div>
+                        
+                        <div>
+                            <div class="flex items-start justify-between mb-2">
+                                <div class="flex items-center space-x-2.5">
+                                    <span class="text-2xl p-1.5 bg-slate-900 rounded-xl">${item.emoji}</span>
+                                    <div>
+                                        <h4 class="font-bold text-sm text-white">${item.name}</h4>
+                                        <span class="text-[10px] font-semibold text-orange-400 bg-orange-950/80 px-2 py-0.5 rounded border border-orange-800/40">${item.stateName}</span>
+                                    </div>
+                                </div>
+                                <button onclick="removeQueueItem('${item.instanceId}')" class="text-slate-500 hover:text-red-400 p-1.5 rounded-lg transition-colors">✕</button>
+                            </div>
+                            
+                            <div class="flex items-center justify-between my-3 bg-slate-900/80 p-3 rounded-xl border border-slate-800">
+                                <div>
+                                    <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block">Griddle Temp</span>
+                                    <span class="text-xs font-bold text-orange-400">${item.temp}</span>
+                                </div>
+                                <div class="text-right">
+                                    <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block">Time Remaining</span>
+                                    <span class="text-xl font-mono font-black ${item.remainingSeconds === 0 ? 'text-emerald-400 animate-pulse' : 'text-white'}">${timeStr}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center space-x-2 pt-2 border-t border-slate-900">
+                            <button onclick="toggleQueueTimer('${item.instanceId}')" class="flex-1 py-2 px-3 rounded-xl font-bold text-xs transition-all ${item.isRunning ? 'bg-amber-600/20 border border-amber-500 text-amber-400 hover:bg-amber-600/30' : 'bg-orange-600 hover:bg-orange-500 text-white shadow-md'}">
+                                ${item.isRunning ? '⏸️ Pause' : '▶️ Start Timer'}
+                            </button>
+                            <button onclick="resetQueueTimer('${item.instanceId}')" class="bg-slate-900 hover:bg-slate-800 text-slate-300 px-3 py-2 rounded-xl text-xs font-semibold border border-slate-800 transition-all">
+                                🔄 Reset
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function toggleQueueTimer(instanceId) {
+            const item = cookingQueue.find(i => i.instanceId === instanceId);
+            if (!item) return;
+
+            if (item.isRunning) {
+                clearInterval(item.timerInterval);
+                item.isRunning = false;
+            } else {
+                item.isRunning = true;
+                item.timerInterval = setInterval(() => {
+                    if (item.remainingSeconds > 0) {
+                        item.remainingSeconds--;
+
+                        // Check for Halfway Flip Alert
+                        if (item.remainingSeconds === item.halfwaySeconds && !item.halfwayAlertShown) {
+                            item.halfwayAlertShown = true;
+                            triggerFlipAlert(item);
+                        }
+
+                        if (item.remainingSeconds === 0) {
+                            clearInterval(item.timerInterval);
+                            item.isRunning = false;
+                        }
+                        renderQueueItems();
+                    }
+                }, 1000);
+            }
+            renderQueueItems();
+        }
+
+        function resetQueueTimer(instanceId) {
+            const item = cookingQueue.find(i => i.instanceId === instanceId);
+            if (!item) return;
+
+            clearInterval(item.timerInterval);
+            item.isRunning = false;
+            item.remainingSeconds = item.totalSeconds;
+            item.halfwayAlertShown = false;
+            renderQueueItems();
+        }
+
+        function removeQueueItem(instanceId) {
+            const item = cookingQueue.find(i => i.instanceId === instanceId);
+            if (item && item.timerInterval) clearInterval(item.timerInterval);
+
+            cookingQueue = cookingQueue.filter(i => i.instanceId !== instanceId);
+            updateQueueBadge();
+            renderQueueItems();
+        }
+
+        function startAllQueuedTimers() {
+            cookingQueue.forEach(item => {
+                if (!item.isRunning && item.remainingSeconds > 0) {
+                    toggleQueueTimer(item.instanceId);
+                }
+            });
+        }
+
+        function pauseAllQueuedTimers() {
+            cookingQueue.forEach(item => {
+                if (item.isRunning) {
+                    toggleQueueTimer(item.instanceId);
+                }
+            });
+        }
+
+        function clearQueue() {
+            cookingQueue.forEach(item => {
+                if (item.timerInterval) clearInterval(item.timerInterval);
+            });
+            cookingQueue = [];
+            updateQueueBadge();
+            renderQueueItems();
+        }
+
+        // Halfway Flip Alert Pop-up Trigger
+        function triggerFlipAlert(item) {
+            document.getElementById('flip-alert-title').innerText = `Flip Your ${item.name} Now!`;
+            document.getElementById('flip-alert-desc').innerText = `Your ${item.name} (${item.stateName}) has reached the halfway mark. Give it a clean flip on the Blackstone ceramic surface for even browning.`;
+            document.getElementById('flip-alert-modal').classList.remove('hidden');
+        }
+
+        function dismissFlipAlert() {
+            document.getElementById('flip-alert-modal').classList.add('hidden');
+        }
+
+        const plannerItemsList = [
+            { id: 'bacon', name: '🥓 Bacon', defaultZone: 1 },
+            { id: 'sausage', name: '🌭 Pork Sausage', defaultZone: 1 },
+            { id: 'smash-burger', name: '🍔 Smash Burgers', defaultZone: 1 },
+            { id: 'ribeye-steak', name: '🥩 Ribeye Steak', defaultZone: 1 },
+            { id: 'chicken-breast', name: '🍗 Chicken Breast', defaultZone: 1 },
+            { id: 'pancakes', name: '🥞 Pancakes', defaultZone: 2 },
+            { id: 'french-toast', name: '🍞 French Toast', defaultZone: 2 },
+            { id: 'toast', name: '🍞 Toast', defaultZone: 2 },
+            { id: 'scrambled-eggs', name: '🍳 Scrambled Eggs', defaultZone: 2 },
+            { id: 'grilled-cheese', name: '🧀 Grilled Cheese', defaultZone: 2 },
+            { id: 'fajita-peppers', name: '🫑 Fajita Veggies', defaultZone: 2 }
+        ];
+
+        function renderPlannerCheckboxes() {
+            const container = document.getElementById('planner-checkboxes');
+            container.innerHTML = plannerItemsList.map(item => `
+                <label class="flex items-center space-x-3 bg-slate-950/50 border border-slate-800 hover:border-slate-700 p-3 rounded-xl cursor-pointer transition-all">
+                    <input type="checkbox" value="${item.id}" onchange="calculatePlannerZones()" class="w-4 h-4 rounded bg-slate-900 border-slate-700 text-orange-600 focus:ring-orange-500 focus:ring-offset-slate-900">
+                    <span class="text-xs font-semibold text-slate-200">${item.name}</span>
+                </label>
+            `).join('');
+        }
+
+        function calculatePlannerZones() {
+            const checkboxes = document.querySelectorAll('#planner-checkboxes input[type="checkbox"]:checked');
+            const selectedIds = Array.from(checkboxes).map(cb => cb.value);
+
+            const zone1Rec = document.getElementById('zone-1-rec');
+            const zone2Rec = document.getElementById('zone-2-rec');
+
+            if (selectedIds.length === 0) {
+                zone1Rec.innerHTML = 'Select items above to generate recommendation.';
+                zone2Rec.innerHTML = 'Select items above to generate recommendation.';
+                return;
+            }
+
+            let z1Items = [];
+            let z2Items = [];
+
+            selectedIds.forEach(id => {
+                const found = plannerItemsList.find(i => i.id === id);
+                if (found) {
+                    if (found.defaultZone === 1) z1Items.push(found.name);
+                    else z2Items.push(found.name);
+                }
+            });
+
+            zone1Rec.innerHTML = z1Items.length > 0 
+                ? `<span class="font-bold text-orange-400">375°F - 425°F (High Sizzle)</span><br><span class="text-xs text-slate-300 mt-1 block">Items: ${z1Items.join(', ')}</span>`
+                : `<span class="text-slate-400">Idle / Low (No high-heat meats selected)</span>`;
+
+            zone2Rec.innerHTML = z2Items.length > 0 
+                ? `<span class="font-bold text-blue-400">325°F - 350°F (Gentle / Toasting)</span><br><span class="text-xs text-slate-300 mt-1 block">Items: ${z2Items.join(', ')}</span>`
+                : `<span class="text-slate-400">Idle / Low (No delicate starches selected)</span>`;
+        }
+
+        function resetPlanner() {
+            const checkboxes = document.querySelectorAll('#planner-checkboxes input[type="checkbox"]');
+            checkboxes.forEach(cb => cb.checked = false);
+            calculatePlannerZones();
+        }
+    </script>
+</body>
+</html>
